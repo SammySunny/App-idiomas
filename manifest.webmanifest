@@ -1,0 +1,19 @@
+{
+  "name": "Parla & Sprich — Alemán e italiano",
+  "short_name": "Parla&Sprich",
+  "description": "Aprendé alemán e italiano desde nivel principiante hasta avanzado, sin conexión.",
+  "lang": "es",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1b1a24",
+  "theme_color": "#1b1a24",
+  "categories": ["education"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

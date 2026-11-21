@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1b1a24">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Aprendé alemán e italiano desde nivel principiante hasta avanzado. Funciona sin conexión.">
+  <title>Parla &amp; Sprich · Alemán e italiano</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Parla&amp;Sprich">
+  <link rel="preload" href="fonts/lexend.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#inicio" aria-label="Parla y Sprich, inicio"><span id="brandLogo"></span><span class="brand-name">Parla <span class="amp">&amp;</span> Sprich</span></a>
+    <div class="top-right">
+      <span class="chip streak" title="Días seguidos estudiando"><span data-ico="flame"></span><b id="streakVal">0</b></span>
+      <button class="lang-btn" data-act="switchLang" title="Cambiar de idioma"><span id="langLabel">Idioma</span><span data-ico="swap"></span></button>
+    </div>
+  </header>
+
+  <main id="app" tabindex="-1">
+    <noscript><p style="padding:24px">Esta app necesita JavaScript activado.</p></noscript>
+  </main>
+
+  <nav class="tabbar" aria-label="Secciones">
+    <a href="#inicio" data-tab="learn"><span data-ico="book"></span><span>Camino</span></a>
+    <a href="#temas" data-tab="topics"><span data-ico="layers"></span><span>Temas</span></a>
+    <a href="#practicar" data-tab="practice"><span data-ico="target"></span><span>Practicar</span><i class="badge" id="dueBadge" hidden></i></a>
+    <a href="#progreso" data-tab="stats"><span data-ico="chart"></span><span>Progreso</span></a>
+    <a href="#ajustes" data-tab="settings"><span data-ico="sliders"></span><span>Ajustes</span></a>
+  </nav>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/data-de.js"></script>
+  <script src="js/data-it.js"></script>
+  <script src="js/data-de-extra.js"></script>
+  <script src="js/data-it-extra.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

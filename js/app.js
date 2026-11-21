@@ -52,6 +52,7 @@
     pen: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
     search: '<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',
     chev: '<path d="M6 9l6 6 6-6"/>',
+    share: '<path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/>',
     wifi: '<path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r=".8"/>',
   };
   const ico = (n, c = '') => `<svg class="ico ${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n] || ''}</svg>`;
@@ -61,7 +62,7 @@
   const emptyProg = () => ({ units: {}, srs: {}, xp: 0, miss: {} });
   const defaults = () => ({
     lang: null,
-    settings: { rate: 0.9, autoplay: true, unlockAll: false, goal: 20, direction: 'mix' },
+    settings: { rate: 0.9, autoplay: true, unlockAll: false, goal: 20, direction: 'mix', installHide: null },
     progress: Object.fromEntries(LANGS.map(l => [l, emptyProg()])),
     activity: {},
     streak: { count: 0, last: null },
@@ -83,6 +84,7 @@
         unlockAll: !!st.unlockAll,
         goal: [10, 20, 40, 60].includes(Number(st.goal)) ? Number(st.goal) : d.settings.goal,
         direction: ['mix', 'to', 'from'].includes(st.direction) ? st.direction : d.settings.direction,
+        installHide: DATE.test(st.installHide) ? st.installHide : null,
       },
       progress: {},
       activity: {},
@@ -544,7 +546,38 @@
         </section>`;
     }).join('');
 
-    app.innerHTML = `${hero}${levels}`;
+    app.innerHTML = `<div id="installSlot">${installBannerHTML()}</div>${hero}${levels}`;
+  }
+
+  /* ---------- aviso para instalar la app ----------
+     Solo en la pantalla principal, solo si el navegador permite instalarla y todavía no está instalada.
+     «Ahora no» lo oculta 14 días; la opción sigue en Ajustes. */
+  function canOfferInstall() {
+    if (isStandalone()) return false;
+    if (S.settings.installHide && S.settings.installHide > dayStr()) return false;
+    return !!installEvt || isIOS;
+  }
+  function installBannerHTML() {
+    if (!canOfferInstall()) return '';
+    return `
+      <aside class="install" aria-label="Instalar la app">
+        <span class="install-icon">${LOGO}</span>
+        <span class="install-text">
+          <b>Instalá la app en tu ${isIOS ? 'iPhone' : 'dispositivo'}</b>
+          <span>Se abre desde la pantalla de inicio, funciona sin internet y ocupa menos de 1 MB.</span>
+        </span>
+        ${isIOS ? `<p class="install-ios" id="iosSteps" hidden>En Safari tocá ${ico('share')} <b>Compartir</b> y después <b>Agregar a inicio</b>.</p>` : ''}
+        <span class="install-actions">
+          <button class="btn small primary" data-act="${isIOS ? 'iosSteps' : 'install'}">${ico('down')} ${isIOS ? 'Cómo instalarla' : 'Instalar'}</button>
+          <button class="btn small ghost" data-act="installLater">Ahora no</button>
+        </span>
+      </aside>`;
+  }
+  function hideInstallBanner() {
+    const el = $('#installSlot .install');
+    if (!el) return;
+    el.classList.add('leaving');
+    setTimeout(() => el.remove(), 220);
   }
   function unitNode(l, u, n) {
     const rec = prog(l).units[u.id];
@@ -1385,9 +1418,20 @@
     install: async () => {
       if (!installEvt) return;
       installEvt.prompt();
-      await installEvt.userChoice.catch(() => {});
+      const choice = await installEvt.userChoice.catch(() => null);
       installEvt = null;
-      viewSettings();
+      if (choice && choice.outcome !== 'accepted') { S.settings.installHide = addDays(7); save(); }
+      if ($('#installSlot')) hideInstallBanner(); else if (location.hash === '#ajustes') viewSettings();
+    },
+    installLater: () => {
+      S.settings.installHide = addDays(14);
+      save();
+      hideInstallBanner();
+      toast('Podés instalarla cuando quieras desde Ajustes');
+    },
+    iosSteps: el => {
+      const p = $('#iosSteps');
+      if (p) { p.hidden = !p.hidden; el.setAttribute('aria-expanded', String(!p.hidden)); }
     },
     export: exportData,
     clearCache,
@@ -1456,8 +1500,13 @@
   });
 
   /* ---------- instalación y modo offline ---------- */
-  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; });
-  window.addEventListener('appinstalled', () => { installEvt = null; toast('App instalada'); });
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    installEvt = e;
+    const slot = $('#installSlot');
+    if (slot && !slot.innerHTML.trim()) slot.innerHTML = installBannerHTML();
+  });
+  window.addEventListener('appinstalled', () => { installEvt = null; hideInstallBanner(); toast('App instalada'); });
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     const hadController = !!navigator.serviceWorker.controller;
     window.addEventListener('load', async () => {

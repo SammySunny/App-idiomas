@@ -245,6 +245,25 @@ body.focus main { padding: calc(env(safe-area-inset-top, 0px) + 12px) 18px 0; }
 .stars .on { color: var(--butter); fill: var(--butter); }
 .stars .off { color: var(--line); }
 
+/* ---------- aviso de instalación ---------- */
+.install {
+  display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 4px 14px;
+  padding: 16px; margin-bottom: 22px; border-radius: 22px;
+  background: linear-gradient(120deg, color-mix(in srgb, var(--peach) 24%, var(--surface)), color-mix(in srgb, var(--mint) 24%, var(--surface)));
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--line));
+  animation: rise .4s ease-out;
+  transition: opacity .2s, transform .2s;
+}
+.install.leaving { opacity: 0; transform: translateY(-8px); }
+.install-icon .logo { display: block; width: 46px; height: 46px; }
+.install-text { display: grid; gap: 2px; min-width: 0; }
+.install-text b { font-weight: 600; }
+.install-text span { color: var(--soft); font-size: .88rem; line-height: 1.4; }
+.install-ios { grid-column: 1 / -1; margin-top: 8px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--bg) 55%, transparent); font-size: .9rem; }
+.install-ios .ico { width: 17px; height: 17px; vertical-align: -3px; color: var(--accent); }
+.install-actions { grid-column: 1 / -1; display: flex; gap: 8px; margin-top: 10px; }
+.install-actions .btn.primary { flex: 1; }
+
 /* ---------- unidad ---------- */
 .back { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-size: .92rem; margin: 0 0 14px -6px; padding: 6px; }
 .back .ico { width: 18px; height: 18px; }

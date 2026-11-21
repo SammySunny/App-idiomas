@@ -66,25 +66,53 @@
     activity: {},
     streak: { count: 0, last: null },
   });
+  /* Todo lo que viene de localStorage o de un archivo importado se valida y se convierte al tipo
+     esperado. Así un archivo manipulado no puede inyectar HTML ni código en la página. */
+  const DATE = /^\d{4}-\d{2}-\d{2}$/;
+  const obj = v => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
+  const int = (v, min = 0, max = 1e9) => { const n = Math.floor(Number(v)); return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : min; };
+  const num = (v, min, max, def) => { const n = Number(v); return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : def; };
+  const safeKey = k => /^[a-z0-9-]{1,40}(#\d{1,3})?$/i.test(k);
+  function sanitize(s) {
+    const d = defaults(), st = obj(s.settings);
+    const out = {
+      lang: C[s.lang] ? s.lang : null,
+      settings: {
+        rate: num(st.rate, 0.5, 1.3, d.settings.rate),
+        autoplay: st.autoplay === undefined ? d.settings.autoplay : !!st.autoplay,
+        unlockAll: !!st.unlockAll,
+        goal: [10, 20, 40, 60].includes(Number(st.goal)) ? Number(st.goal) : d.settings.goal,
+        direction: ['mix', 'to', 'from'].includes(st.direction) ? st.direction : d.settings.direction,
+      },
+      progress: {},
+      activity: {},
+      streak: { count: int(obj(s.streak).count), last: DATE.test(obj(s.streak).last) ? obj(s.streak).last : null },
+    };
+    for (const l of LANGS) {
+      const p = obj(obj(s.progress)[l]), q = emptyProg();
+      q.xp = int(p.xp);
+      for (const [k, v] of Object.entries(obj(p.units))) {
+        if (safeKey(k)) q.units[k] = { best: num(obj(v).best, 0, 1, 0), done: !!obj(v).done, times: int(obj(v).times) };
+      }
+      for (const [k, v] of Object.entries(obj(p.srs))) {
+        if (safeKey(k) && DATE.test(obj(v).due)) q.srs[k] = { box: int(obj(v).box, 1, 5), due: obj(v).due };
+      }
+      for (const [k, v] of Object.entries(obj(p.miss))) if (safeKey(k)) q.miss[k] = int(v, 1, 999);
+      out.progress[l] = q;
+    }
+    for (const [k, v] of Object.entries(obj(s.activity))) if (DATE.test(k)) out.activity[k] = int(v);
+    return out;
+  }
   function load() {
-    const d = defaults();
     try {
       const s = JSON.parse(localStorage.getItem(KEY) || 'null');
-      if (s && typeof s === 'object') {
-        return {
-          ...d,
-          lang: C[s.lang] ? s.lang : null,
-          settings: { ...d.settings, ...(s.settings || {}) },
-          progress: Object.fromEntries(LANGS.map(l => [l, { ...emptyProg(), ...((s.progress || {})[l] || {}) }])),
-          activity: s.activity || {},
-          streak: { ...d.streak, ...(s.streak || {}) },
-        };
-      }
+      if (s && typeof s === 'object') return sanitize(s);
     } catch (e) { /* datos dañados: se empieza de cero */ }
-    return d;
+    return defaults();
   }
   let S = load();
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* almacenamiento lleno o bloqueado */ } };
+  if (localStorage.getItem(KEY) !== null) save();   // reescribe los datos ya validados
 
   /* ---------- índice del curso ---------- */
   const FLAT = {}, TOPICS = {}, ITEMS = {};
@@ -1244,7 +1272,7 @@
       });
       if (!ok) return;
       try {
-        localStorage.setItem(KEY, JSON.stringify(d));
+        localStorage.setItem(KEY, JSON.stringify(sanitize(d)));
         S = load();
         toast('Copia restaurada');
         route();
